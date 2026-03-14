@@ -15,23 +15,21 @@
 
 ## 🏢 About the Company
 
-AtliQ Hardwares is a global computer hardware manufacturer distributing products
-through leading retail channels including Amazon, Croma, and Best Buy. Operating
-across multiple markets, the company serves both B2B and B2C segments with a
-diverse product portfolio.
+AtliQ Hardwares is a computer hardware company that sells products worldwide
+through channels like Amazon, Croma, and Best Buy. They work with both
+businesses and individual customers across many markets.
 
 ---
 
 ## 🔍 Problem Statement
 
-As sales and operations grew, AtliQ's complete dependence on Excel became a
-serious liability. Business-critical planning files swelled beyond manageable
-limits — and a catastrophic file crash became the final trigger for change.
+AtliQ was running everything on Excel. As the business grew, their Excel files
+got too large and slow to handle. One day, a critical business file crashed and
+could not be recovered.
 
-AtliQ responded by migrating to a structured **MySQL database** and building a
-dedicated analytics team. The team's mandate: transform raw transactional data
-into clear, timely business intelligence — answering real questions from
-stakeholders across product, sales, and supply chain.
+This was the turning point. AtliQ moved to a **MySQL database** and hired a data
+analytics team to answer important business questions using SQL — helping
+the company make smarter, faster decisions.
 
 ---
 
