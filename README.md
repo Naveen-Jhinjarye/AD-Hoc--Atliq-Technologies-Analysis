@@ -179,6 +179,6 @@ LIMIT 1000000;
 
 #### 📊 Result
 
-![Request 01 Result](add-your-screenshot-path-here.png)
+![Request 01 Result]![Query Result](https://github.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/blob/main/query%20code%20and%20result%20image/Screenshot%20(627).png)
 
 ---
