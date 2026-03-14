@@ -3,8 +3,6 @@
 ![MySQL](https://img.shields.io/badge/MySQL-005C84?style=flat&logo=mysql&logoColor=white)
 ![Jira](https://img.shields.io/badge/Jira-0052CC?style=flat&logo=jira&logoColor=white)
 ![Kanban](https://img.shields.io/badge/Methodology-Kanban-brightgreen?style=flat)
-![Status](https://img.shields.io/badge/Status-In%20Progress-orange?style=flat)
-![MySQL](https://img.shields.io/badge/MySQL-005C84?style=flat&logo=mysql&logoColor=white)
 ![Stored Procedures](https://img.shields.io/badge/SQL-Stored%20Procedures-blue?style=flat)
 ![Views & Joins](https://img.shields.io/badge/SQL-Views%20%26%20Joins-4A90D9?style=flat)
 ![Ad-hoc Analytics](https://img.shields.io/badge/Analysis-Ad--hoc%20Analytics-orange?style=flat)
