@@ -73,7 +73,7 @@ Work visualized on a Kanban board — tasks moved across
 | Database | MySQL |
 | IDE | MySQL Workbench |
 | Project Management | Jira + Kanban Board |
-| SQL Concepts | Joins, CTEs, Views, Stored Procedures, Window Functions |
+| SQL Concepts | Joins, CTEs, Views, Stored Procedures, Functions,Window Functions |
 | Domain | Consumer Electronics / Hardware |
 
 ---
@@ -109,3 +109,76 @@ The database `gdb0041` contains the following tables used across all analyses:
 |-------|-------------|
 | `dim_date` | Manually created fiscal date table — maps each date to fiscal month, quarter & year (fiscal year: Sep–Aug) |
 | `fact_act_est` | Combined actual sales + forecast quantity in one place — built for supply chain & forecast accuracy analysis |
+
+---
+
+## 📋 Ad-Hoc Requests & SQL Solutions
+
+---
+
+### 🔖 Request 01 — Croma India Product-Wise Sales Report
+
+> **As a Product Owner**, I want a monthly product-level sales report for
+> Croma India (FY 2021) to track individual product performance and run
+> further analysis in Excel.
+
+**Output Fields:** Month · Product Name · Variant · Sold Quantity · Gross Price Per Item · Gross Price Total
+
+---
+
+#### ⚙️ Step 1 — Created a Reusable Function
+
+To handle AtliQ's **Sep–Aug fiscal year**, a custom MySQL function was built
+that converts any calendar date into its correct fiscal year.
+```sql
+CREATE FUNCTION `get_fiscal_year`(Calender_date DATE)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE fiscal_year INT;
+    SET fiscal_year = YEAR(DATE_ADD(Calender_date, INTERVAL 4 MONTH));
+    RETURN fiscal_year;
+END
+```
+
+> 💡 **Logic:** Adding 4 months to any date shifts September → January,
+> making `YEAR()` return the correct fiscal year automatically.
+
+---
+
+#### 🔍 Step 2 — Sales Report Query
+```sql
+SELECT
+    fsm.date,
+    fsm.product_code,
+    p.product,
+    p.variant,
+    fsm.sold_quantity,
+    g.gross_price,
+    ROUND(sold_quantity * gross_price, 2) AS gross_price_total
+FROM fact_sales_monthly fsm
+JOIN dim_product p
+    ON fsm.product_code = p.product_code
+JOIN fact_gross_price g
+    ON g.product_code = fsm.product_code
+    AND g.fiscal_year = get_fiscal_year(fsm.date)
+WHERE fsm.customer_code = 90002002
+    AND get_fiscal_year(fsm.date) = 2021
+ORDER BY fsm.date ASC
+LIMIT 1000000;
+```
+
+**Tables Used:**
+| Table | Purpose |
+|-------|---------|
+| `fact_sales_monthly` | Monthly sold quantity per customer & product |
+| `dim_product` | Product name & variant details |
+| `fact_gross_price` | Gross price per product per fiscal year |
+
+---
+
+#### 📊 Result
+
+![Request 01 Result](add-your-screenshot-path-here.png)
+
+---
