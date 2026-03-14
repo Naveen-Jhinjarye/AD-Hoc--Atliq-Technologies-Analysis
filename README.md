@@ -1,5 +1,3 @@
-# AD-Hoc--Atliq-Technologies-Analysis
-
 # 💼 Ad-Hoc Business Analysis — AtliQ Hardwares
 
 ![MySQL](https://img.shields.io/badge/MySQL-005C84?style=flat&logo=mysql&logoColor=white)
@@ -63,5 +61,3 @@ solution** to respond to these business questions quickly and consistently.
 - **Domain:** Consumer Electronics / Hardware Manufacturing
 
 ---
-
-*Built as part of the Codebasics SQL Challenge*
