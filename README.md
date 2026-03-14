@@ -81,3 +81,33 @@ Work visualized on a Kanban board — tasks moved across
 ---
 
 > **Type:** Advanced Course Project &nbsp;|&nbsp; **Methodology:** Kanban via Jira
+
+---
+
+## 🗄️ Dataset Overview
+
+The database `gdb0041` contains the following tables used across all analyses:
+
+### 📋 Dimension Tables
+| Table | Description |
+|-------|-------------|
+| `dim_customer` | Customer details — customer_code,customer,platform,channel,market,subregion,region|
+| `dim_product` | Product details — product_code,segment, division, product,category, variant |
+| `dim_date` | Custom fiscal calendar (Sep–Aug cycle) · Range: `2017-09-01` to `2021-12-01` |
+
+### 📦 Fact Tables
+| Table | Description |
+|-------|-------------|
+| `fact_sales_monthly` | Monthly sales quantity per customer & product |
+| `fact_pre_invoice_deductions` | Pre-invoice discount % per customer per fiscal year |
+| `fact_post_invoice_deductions` | Post-invoice & other deductions |
+| `fact_gross_price` | Gross price per product per fiscal year |
+| `fact_freight_cost` | Freight & other cost % per market per fiscal year |
+| `fact_manufacturing_cost` | Manufacturing cost per product per fiscal year |
+| `fact_forecast_monthly` | Monthly forecast quantity per customer & product |
+
+### 🔧 Custom Tables Created
+| Table | Description |
+|-------|-------------|
+| `dim_date` | Manually created fiscal date table — maps each date to fiscal month, quarter & year (fiscal year: Sep–Aug) |
+| `fact_act_est` | Combined actual sales + forecast quantity in one place — built for supply chain & forecast accuracy analysis |
