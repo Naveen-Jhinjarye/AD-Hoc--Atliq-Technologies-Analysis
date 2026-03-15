@@ -438,7 +438,7 @@ CALL top_n_customer_by_net_sales("India", 2021, 3);
 > sales by customer (APAC, EU, LTAM, etc.) for any given fiscal year —
 > to analyze AtliQ's financial performance across global regions.
 
-**Output:** % Net Sales share per customer within each region · Visualized as Bar Charts
+**Output:** % Net Sales share per customer within each region · Visualized as Pie Charts
 
 ---
 
