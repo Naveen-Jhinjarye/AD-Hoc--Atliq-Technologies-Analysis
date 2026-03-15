@@ -253,5 +253,6 @@ CALL get_monthly_gross_sales_for_customers('90002002,90002003,90002004');
 
 #### 📊 Result
 
-![Request 02 Result](https://github.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/commit/7ba9fd09b620bd15df9a7c086d97317670226c4c)
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(646).png)
+
 ---
