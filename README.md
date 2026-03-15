@@ -260,179 +260,164 @@ CALL get_monthly_gross_sales_for_customers('90002002,90002003,90002004');
 
 ---
 
-### 🔖 Request 03 — Market Badge Classification (Stored Procedure)
+### 🔖 Request 04 — Top Markets, Products & Customers by Net Sales
 
-> **As a Product Owner**, I want a stored procedure that automatically
-> classifies any market as **Gold** or **Silver** based on total sold
-> quantity for a given fiscal year.
-
-**Logic:** Total Sold Quantity `> 5 Million` → 🥇 Gold · Otherwise → 🥈 Silver
+> **As a Product Owner**, I want a report for top markets, products, and
+> customers by net sales for a given fiscal year — to get a holistic view
+> of AtliQ's financial performance and make better business decisions.
 
 ---
 
-#### ⚙️ Solution — Stored Procedure
+#### 🏗️ Architecture — How It Was Built
+
+Before writing stored procedures, a **layered view approach** was used to
+keep the logic clean, reusable, and easy to maintain.
+```
+fact_sales_monthly
+       ↓
+  Gross Sales View          ← gross price × sold quantity
+       ↓
+  Pre-Invoice Deductions View    ← apply pre-invoice discount %
+       ↓
+  Post-Invoice Deductions View   ← apply post-invoice discount %
+       ↓
+  ✅ net_sales_view              ← final clean net sales table
+```
+
+> 💡 **Performance Note:** Query performance was explored using `dim_date`
+> and an optimized generated column was added directly in
+> `fact_sales_monthly` — reducing repeated function calls and speeding
+> up query execution significantly.
+
+---
+
+#### 👁️ Step 1 — Net Sales View
+
+Combines all deductions into one final clean view with `Net_Sales` ready
+for analysis.
 ```sql
-CREATE PROCEDURE `get_market_badge`(
-    IN  in_market      VARCHAR(45),
-    IN  in_fiscal_year YEAR,
-    OUT out_badge      VARCHAR(15)
+CREATE VIEW `net_sales_view` AS
+    SELECT
+        date, fiscal_year,
+        product_code, customer_code,
+        customer, market,
+        product, variant,
+        sold_quantity, gross_price,
+        gross_price_total,
+        pre_invoice_discount_pct,
+        Net_invoice_Sales,
+        post_invoice_deductions_pct,
+        ROUND(
+            (1 - post_invoice_deductions_pct) * Net_invoice_Sales
+        , 2) AS Net_Sales
+    FROM net_post_invoice_deductions_table_view;
+```
+
+---
+
+#### ⚙️ Step 2 — Three Stored Procedures
+
+---
+
+**🏆 Top N Products by Net Sales**
+```sql
+CREATE PROCEDURE `top_n_products_by_net_sales`(
+    IN in_fiscalYear INT,
+    IN in_top_p      INT
 )
 BEGIN
-    DECLARE TSQ INT DEFAULT 0;
-
-    -- Set default market if none provided
-    IF in_market = "" THEN
-        SET in_market = "India";
-    END IF;
-
-    -- Calculate total sold quantity for given market & fiscal year
-    SELECT SUM(f.sold_quantity) INTO TSQ
-    FROM fact_sales_monthly f
-    JOIN dim_customer c
-        ON c.customer_code = f.customer_code
-    WHERE get_fiscal_year(f.date) = in_fiscal_year
-        AND c.market = in_market
-    GROUP BY c.market;
-
-    -- Assign badge based on threshold
-    IF TSQ > 5000000 THEN
-        SET out_badge = "Gold";
-    ELSE
-        SET out_badge = "Silver";
-    END IF;
-
+    SELECT
+        product,
+        ROUND(SUM(net_sales) / 1000000, 2) AS net_sales_mln
+    FROM net_sales_view
+    WHERE fiscal_year = in_fiscalYear
+    GROUP BY product
+    ORDER BY net_sales_mln DESC
+    LIMIT in_top_p;
 END
 ```
-![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(651).png)
-![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(652).png)
 
-> 💡 **Default Handling:** If no market is passed, procedure automatically
-> defaults to `"India"` — making it safer for non-technical users.
+---
+
+**🌍 Top N Markets by Net Sales**
+```sql
+CREATE PROCEDURE `top_n_market_by_net_sales`(
+    IN in_fY     INT,
+    IN in_top_n  INT
+)
+BEGIN
+    SELECT
+        market,
+        ROUND(SUM(net_sales) / 1000000, 2) AS net_sales_mln
+    FROM net_sales_view
+    WHERE fiscal_year = in_fY
+    GROUP BY market
+    ORDER BY net_sales_mln DESC
+    LIMIT in_top_n;
+END
+```
+
+---
+
+**🤝 Top N Customers by Net Sales**
+```sql
+CREATE PROCEDURE `top_n_customer_by_net_sales`(
+    IN in_market     VARCHAR(45),
+    IN in_fiscalYear INT,
+    IN in_top_c      INT
+)
+BEGIN
+    SELECT
+        customer,
+        ROUND(SUM(net_sales) / 1000000, 2) AS net_sales_mln
+    FROM net_sales_view
+    WHERE fiscal_year = in_fiscalYear
+        AND market = in_market
+    GROUP BY customer
+    ORDER BY net_sales_mln DESC
+    LIMIT in_top_c;
+END
+```
 
 ---
 
 #### 🚀 How to Use
 ```sql
--- Step 1: Declare output variable
-SET @out_badge = "";
+-- Top 5 products in FY 2021
+CALL top_n_products_by_net_sales(2021, 5);
 
--- Step 2: Call the procedure
-CALL get_market_badge("India", 2021, @out_badge);
+-- Top 3 markets in FY 2021
+CALL top_n_market_by_net_sales(2021, 3);
 
--- Step 3: Retrieve the result
-SELECT @out_badge AS market_badge;
+-- Top 3 customers in India for FY 2021
+CALL top_n_customer_by_net_sales("India", 2021, 3);
 ```
 
 ---
 
-#### 🔑 Procedure Design — IN vs OUT Parameters
+#### 🔑 Why Three Separate Procedures?
 
-| Parameter | Type | Purpose |
-|-----------|------|---------|
-| `in_market` | `IN` | Market name input (default: India) |
-| `in_fiscal_year` | `IN` | Fiscal year to evaluate |
-| `out_badge` | `OUT` | Returns Gold or Silver classification |
+| Procedure | Filters By | Groups By |
+|-----------|-----------|-----------|
+| `top_n_products_by_net_sales` | Fiscal Year | Product |
+| `top_n_market_by_net_sales` | Fiscal Year | Market |
+| `top_n_customer_by_net_sales` | Fiscal Year + Market | Customer |
+
+> 💡 **Net Sales values divided by 1,000,000** — reported in **millions (MLN)**
+> for cleaner, more readable output.
 
 ---
 
-**Tables Used:**
-| Table | Purpose |
-|-------|---------|
-| `fact_sales_monthly` | Monthly sold quantity per customer |
-| `dim_customer` | Maps customer code to market |
+**Views Used:**
+| View | Purpose |
+|------|---------|
+| `net_sales_view` | Final net sales after all deductions |
+| `net_post_invoice_deductions_table_view` | Base view feeding into net sales |
 
 ---
 
 #### 📊 Result
 
-![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(654).png)
-
----
----
-
-### 🔖 Request 03 — Market Badge Classification (Stored Procedure)
-
-> **As a Product Owner**, I want a stored procedure that automatically
-> classifies any market as **Gold** or **Silver** based on total sold
-> quantity for a given fiscal year.
-
-**Logic:** Total Sold Quantity `> 5 Million` → 🥇 Gold · Otherwise → 🥈 Silver
-
----
-
-#### ⚙️ Solution — Stored Procedure
-```sql
-CREATE PROCEDURE `get_market_badge`(
-    IN  in_market      VARCHAR(45),
-    IN  in_fiscal_year YEAR,
-    OUT out_badge      VARCHAR(15)
-)
-BEGIN
-    DECLARE TSQ INT DEFAULT 0;
-
-    -- Set default market if none provided
-    IF in_market = "" THEN
-        SET in_market = "India";
-    END IF;
-
-    -- Calculate total sold quantity for given market & fiscal year
-    SELECT SUM(f.sold_quantity) INTO TSQ
-    FROM fact_sales_monthly f
-    JOIN dim_customer c
-        ON c.customer_code = f.customer_code
-    WHERE get_fiscal_year(f.date) = in_fiscal_year
-        AND c.market = in_market
-    GROUP BY c.market;
-
-    -- Assign badge based on threshold
-    IF TSQ > 5000000 THEN
-        SET out_badge = "Gold";
-    ELSE
-        SET out_badge = "Silver";
-    END IF;
-
-END
-```
-
-> 💡 **Default Handling:** If no market is passed, procedure automatically
-> defaults to `"India"` — making it safer for non-technical users.
-
----
-
-#### 🚀 How to Use
-```sql
--- Step 1: Declare output variable
-SET @out_badge = "";
-
--- Step 2: Call the procedure
-CALL get_market_badge("India", 2021, @out_badge);
-
--- Step 3: Retrieve the result
-SELECT @out_badge AS market_badge;
-```
-
----
-
-#### 🔑 Procedure Design — IN vs OUT Parameters
-
-| Parameter | Type | Purpose |
-|-----------|------|---------|
-| `in_market` | `IN` | Market name input (default: India) |
-| `in_fiscal_year` | `IN` | Fiscal year to evaluate |
-| `out_badge` | `OUT` | Returns Gold or Silver classification |
-
----
-
-**Tables Used:**
-| Table | Purpose |
-|-------|---------|
-| `fact_sales_monthly` | Monthly sold quantity per customer |
-| `dim_customer` | Maps customer code to market |
-
----
-
-#### 📊 Result
-
-![Request 03 Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot(629).png)
+![Request 04 Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot(630).png)
 
 ---
