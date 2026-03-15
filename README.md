@@ -430,3 +430,84 @@ CALL top_n_customer_by_net_sales("India", 2021, 3);
 
 ---
 
+---
+
+### 🔖 Request 05 — Net Sales % Share by Region
+
+> **As a Product Owner**, I want a region-wise percentage breakdown of net
+> sales by customer (APAC, EU, LTAM, etc.) for any given fiscal year —
+> to analyze AtliQ's financial performance across global regions.
+
+**Output:** % Net Sales share per customer within each region · Visualized as Bar Charts
+
+---
+
+#### ⚙️ Solution — CTE + Window Function
+
+This query uses a **CTE** to first calculate net sales per customer per
+region, then applies a **Window Function** to compute each customer's
+% share within their region — all in one clean pass.
+```sql
+WITH cte1 AS (
+    SELECT
+        c.customer,
+        c.region,
+        ROUND(SUM(net_sales) / 1000000, 2) AS net_sales_mln
+    FROM net_sales_view n
+    JOIN dim_customer c
+        ON c.customer_code = n.customer_code
+    WHERE fiscal_year = 2021
+    GROUP BY c.customer, c.region
+)
+SELECT
+    *,
+    ROUND(
+        net_sales_mln * 100 / SUM(net_sales_mln) OVER (PARTITION BY region)
+    , 2) AS pct_share
+FROM cte1
+ORDER BY region, net_sales_mln DESC;
+```
+
+---
+
+#### 🧠 Query Breakdown
+
+| Concept | Usage |
+|---------|-------|
+| `CTE (cte1)` | Aggregates net sales per customer & region |
+| `SUM() OVER (PARTITION BY region)` | Calculates total sales within each region |
+| `net_sales_mln * 100 / regional_total` | Converts to % share per customer |
+| `ORDER BY region, net_sales_mln DESC` | Groups regions & ranks customers by sales |
+
+> 💡 **Why Window Function?** `PARTITION BY region` computes the regional
+> total without collapsing rows — so each customer keeps their own row
+> while still seeing the full regional context.
+
+---
+
+#### 🔁 Reusable — Change Fiscal Year Anytime
+```sql
+-- FY 2020
+WHERE fiscal_year = 2020
+
+-- FY 2019
+WHERE fiscal_year = 2019
+```
+
+Simply swap the year — the query handles the rest automatically.
+
+---
+
+**Views & Tables Used:**
+| Asset | Purpose |
+|-------|---------|
+| `net_sales_view` | Final net sales after all deductions |
+| `dim_customer` | Customer name & region mapping |
+
+---
+
+#### 📊 Result — Top 10 Customers by Net Sales % per Region (FY 2021)
+
+![Request 05 Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot(631).png)
+
+---
