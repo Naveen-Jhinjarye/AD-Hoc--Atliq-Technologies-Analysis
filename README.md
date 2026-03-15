@@ -582,3 +582,89 @@ was built to visually rank customers by their global net sales % share.
 ![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(675).png)
 
 ---
+
+---
+
+### 🔖 Request 07 — Top N Products per Division by Quantity Sold
+
+> **As a Product Owner**, I want a stored procedure that returns the top N
+> products within each division ranked by total quantity sold — for any
+> given fiscal year.
+
+**Output Fields:** Division · Product · Total Quantity · Rank
+
+---
+
+#### ⚙️ Solution — Stored Procedure with CTE + Dense Rank
+```sql
+CREATE PROCEDURE `top_n_products_by_division_by_qty_sold`(
+    IN in_fiscal_year INT,
+    IN in_top_n       INT
+)
+BEGIN
+    WITH top_n_division_n_product AS (
+        SELECT
+            p.division,
+            n.product,
+            SUM(n.sold_quantity) AS total_quantity
+        FROM net_sales_view n
+        JOIN dim_product p
+            ON n.product_code = p.product_code
+        WHERE n.fiscal_year = in_fiscal_year
+        GROUP BY p.division, n.product
+    ),
+    cte_2 AS (
+        SELECT *,
+            DENSE_RANK() OVER (
+                PARTITION BY division
+                ORDER BY total_quantity DESC
+            ) AS rnk
+        FROM top_n_division_n_product
+    )
+    SELECT * FROM cte_2
+    WHERE rnk <= in_top_n;
+END
+```
+
+---
+
+#### 🧠 Query Breakdown
+
+| Concept | Usage |
+|---------|-------|
+| `CTE 1` | Aggregates total sold quantity per product per division |
+| `CTE 2` | Applies `DENSE_RANK()` within each division |
+| `PARTITION BY division` | Ranks products independently inside each division |
+| `ORDER BY total_quantity DESC` | Highest selling product gets rank 1 |
+| `WHERE rnk <= in_top_n` | Filters only top N products per division |
+
+> 💡 **Why `DENSE_RANK()` over `ROW_NUMBER()`?** If two products have the
+> exact same quantity, `DENSE_RANK()` gives them the same rank — no
+> product is unfairly excluded from the top N.
+
+---
+
+#### 🚀 How to Use
+```sql
+-- Top 3 products per division for FY 2021
+CALL top_n_products_by_division_by_qty_sold(2021, 3);
+
+-- Top 5 products per division for FY 2020
+CALL top_n_products_by_division_by_qty_sold(2020, 5);
+```
+
+
+**Assets Used:**
+| Asset | Purpose |
+|-------|---------|
+| `net_sales_view` | Final net sales with sold quantity |
+| `dim_product` | Product name & division mapping |
+
+---
+
+#### 📊 Result
+
+
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(706).png)
+
+---
