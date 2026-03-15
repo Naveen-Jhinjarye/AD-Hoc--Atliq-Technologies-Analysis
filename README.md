@@ -546,6 +546,7 @@ ORDER BY net_sales_mln DESC;
 ```
 
 ---
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(680).png)
 
 #### 🧠 Request 05 vs Request 06 — Key Difference
 
@@ -578,6 +579,6 @@ was built to visually rank customers by their global net sales % share.
 
 #### 📊 Result
 
-![Request 06 Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot(632).png)
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(675).png)
 
 ---
