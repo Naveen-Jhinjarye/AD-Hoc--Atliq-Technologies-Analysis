@@ -668,3 +668,160 @@ CALL top_n_products_by_division_by_qty_sold(2020, 5);
 ![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(706).png)
 
 ---
+---
+
+### 🔖 Request 08 — Forecast Accuracy Report (Supply Chain)
+
+> **As a Product Owner**, I want an aggregate forecast accuracy report for
+> all customers in a given fiscal year — to track how well demand forecasts
+> matched actual sales and improve future supply chain planning.
+
+**Output Fields:** Customer Code · Customer Name · Market · Sold Qty ·
+Forecast Qty · Net Error · Net Error % · Abs Error · Abs Error % · Forecast Accuracy %
+
+---
+
+#### 🏗️ Step 1 — Helper Table: `fact_act_estimate`
+
+Before writing the forecast query, a **combined helper table** was created
+that merges actual sales and forecast data into one unified table — making
+supply chain analysis clean and efficient.
+```sql
+CREATE TABLE fact_act_estimate (
+    SELECT
+        s.date              AS date,
+        s.fiscal_year       AS fiscal_year,
+        s.product_code      AS product_code,
+        s.customer_code     AS customer_code,
+        s.sold_quantity     AS sold_quantity,
+        f.forecast_quantity AS forecast_quantity
+    FROM fact_sales_monthly s
+    LEFT JOIN fact_forecast_monthly f
+        USING (date, product_code, customer_code)
+
+    UNION
+
+    SELECT
+        f.date              AS date,
+        f.fiscal_year       AS fiscal_year,
+        f.product_code      AS product_code,
+        f.customer_code     AS customer_code,
+        s.sold_quantity     AS sold_quantity,
+        f.forecast_quantity AS forecast_quantity
+    FROM fact_forecast_monthly f
+    LEFT JOIN fact_sales_monthly s
+        USING (date, product_code, customer_code)
+);
+```
+
+> 💡 **Why two LEFT JOINs with UNION?**
+> - First join → captures all **actual sales** records, even if no forecast exists
+> - Second join → captures all **forecast** records, even if no actual sale occurred
+> - Together they ensure **zero data loss** — a full outer join equivalent in MySQL
+
+---
+
+#### ⚙️ Step 2 — Stored Procedure: Forecast Accuracy Report
+```sql
+CREATE PROCEDURE `get_forecast_accuracy_report`(
+    IN in_fiscal_year INT
+)
+BEGIN
+    WITH fcst_err_t AS (
+        SELECT
+            customer_code,
+            SUM(sold_quantity)                    AS sold_quantity,
+            SUM(forecast_quantity)                AS forecast_quantity,
+            SUM(forecast_quantity - sold_quantity) AS net_err,
+            ROUND(
+                SUM(forecast_quantity - sold_quantity) * 100
+                / SUM(forecast_quantity)
+            , 2)                                  AS net_pct_err,
+            SUM(ABS(forecast_quantity - sold_quantity)) AS abs_err,
+            ROUND(
+                SUM(ABS(forecast_quantity - sold_quantity)) * 100
+                / SUM(forecast_quantity)
+            , 2)                                  AS abs_pct_err
+        FROM fact_act_estimate a
+        WHERE a.fiscal_year = in_fiscal_year
+        GROUP BY customer_code
+    )
+    SELECT
+        e.customer_code,
+        c.customer,
+        c.market,
+        e.sold_quantity,
+        e.forecast_quantity,
+        e.net_err,
+        e.net_pct_err,
+        e.abs_err,
+        e.abs_pct_err,
+        IF(abs_pct_err > 100, 0, 100 - abs_pct_err) AS forecast_accuracy
+    FROM fcst_err_t e
+    JOIN dim_customer c
+        USING (customer_code)
+    ORDER BY forecast_accuracy DESC;
+END
+```
+
+---
+
+#### 🧠 Forecast Accuracy Metrics Explained
+
+| Metric | Formula | What It Tells Us |
+|--------|---------|-----------------|
+| `net_err` | `SUM(forecast - actual)` | Overall over/under forecasting direction |
+| `net_pct_err` | `net_err × 100 / forecast` | Net error as a % of total forecast |
+| `abs_err` | `SUM(ABS(forecast - actual))` | Total error magnitude — ignores direction |
+| `abs_pct_err` | `abs_err × 100 / forecast` | Absolute error as a % of total forecast |
+| `forecast_accuracy` | `100 - abs_pct_err` | Final accuracy % — higher is better |
+
+> 💡 **Why `IF(abs_pct_err > 100, 0, ...)`?**
+> If absolute error exceeds 100% of forecast, accuracy would go negative —
+> which is meaningless. This condition floors it at `0%` instead, keeping
+> results clean and interpretable.
+
+---
+
+#### 🚀 How to Use
+```sql
+-- Forecast accuracy for FY 2021
+CALL get_forecast_accuracy_report(2021);
+
+-- Forecast accuracy for FY 2020
+CALL get_forecast_accuracy_report(2020);
+```
+
+---
+
+**Assets Used:**
+| Asset | Purpose |
+|-------|---------|
+| `fact_act_estimate` | Combined actual + forecast helper table |
+| `dim_customer` | Customer name & market mapping |
+
+---
+
+#### 📊 Result
+
+
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(717).png)
+
+---
+
+## 🎯 Project Summary
+
+| # | Request | Key SQL Concept |
+|---|---------|----------------|
+| 01 | Croma India Product Sales Report | JOIN + Custom Function |
+| 02 | Monthly Gross Sales Report | Stored Procedure |
+| 03 | Market Badge Classification | Stored Proc + IN/OUT Parameters |
+| 04 | Top Markets, Products & Customers | Layered Views + 3 Stored Procedures |
+| 05 | Net Sales % Share by Region | CTE + Window Function (Partition) |
+| 06 | Net Sales % Share Global | CTE + Window Function (Global) |
+| 07 | Top N Products per Division | CTE + Dense Rank |
+| 08 | Forecast Accuracy Report | Helper Table + Error Formula + Stored Proc |
+
+---
+
+> *Domain: Consumer Electronics · Database: MySQL · Project Type: Advanced Course Project · Methodology: Kanban via Jira*
