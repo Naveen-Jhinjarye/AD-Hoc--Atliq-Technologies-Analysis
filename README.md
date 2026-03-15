@@ -314,6 +314,9 @@ CREATE VIEW `net_sales_view` AS
 ```
 
 ---
+#### 📊 Result
+
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(757).png)
 
 #### ⚙️ Step 2 — Three Stored Procedures
 
@@ -338,6 +341,9 @@ END
 ```
 
 ---
+#### 📊 Result
+
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(667).png)
 
 **🌍 Top N Markets by Net Sales**
 ```sql
@@ -358,6 +364,10 @@ END
 ```
 
 ---
+#### 📊 Result
+
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(665).png)
+
 
 **🤝 Top N Customers by Net Sales**
 ```sql
@@ -380,6 +390,10 @@ END
 ```
 
 ---
+#### 📊 Result
+
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(668).png)
+
 
 #### 🚀 How to Use
 ```sql
@@ -416,8 +430,3 @@ CALL top_n_customer_by_net_sales("India", 2021, 3);
 
 ---
 
-#### 📊 Result
-
-![Request 04 Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot(630).png)
-
----
