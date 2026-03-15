@@ -215,6 +215,7 @@ BEGIN
     GROUP BY sm.date;
 END
 ```
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(646).png)
 
 > 💡 **Why `FIND_IN_SET()`?** It allows passing **multiple customer codes**
 > as a comma-separated string — making the procedure flexible for both
@@ -253,9 +254,95 @@ CALL get_monthly_gross_sales_for_customers('90002002,90002003,90002004');
 
 #### 📊 Result
 
-![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(646).png)
-
-
 ![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(647).png)
+
+---
+
+---
+
+### 🔖 Request 03 — Market Badge Classification (Stored Procedure)
+
+> **As a Product Owner**, I want a stored procedure that automatically
+> classifies any market as **Gold** or **Silver** based on total sold
+> quantity for a given fiscal year.
+
+**Logic:** Total Sold Quantity `> 5 Million` → 🥇 Gold · Otherwise → 🥈 Silver
+
+---
+
+#### ⚙️ Solution — Stored Procedure
+```sql
+CREATE PROCEDURE `get_market_badge`(
+    IN  in_market      VARCHAR(45),
+    IN  in_fiscal_year YEAR,
+    OUT out_badge      VARCHAR(15)
+)
+BEGIN
+    DECLARE TSQ INT DEFAULT 0;
+
+    -- Set default market if none provided
+    IF in_market = "" THEN
+        SET in_market = "India";
+    END IF;
+
+    -- Calculate total sold quantity for given market & fiscal year
+    SELECT SUM(f.sold_quantity) INTO TSQ
+    FROM fact_sales_monthly f
+    JOIN dim_customer c
+        ON c.customer_code = f.customer_code
+    WHERE get_fiscal_year(f.date) = in_fiscal_year
+        AND c.market = in_market
+    GROUP BY c.market;
+
+    -- Assign badge based on threshold
+    IF TSQ > 5000000 THEN
+        SET out_badge = "Gold";
+    ELSE
+        SET out_badge = "Silver";
+    END IF;
+
+END
+```
+
+> 💡 **Default Handling:** If no market is passed, procedure automatically
+> defaults to `"India"` — making it safer for non-technical users.
+
+---
+
+#### 🚀 How to Use
+```sql
+-- Step 1: Declare output variable
+SET @out_badge = "";
+
+-- Step 2: Call the procedure
+CALL get_market_badge("India", 2021, @out_badge);
+
+-- Step 3: Retrieve the result
+SELECT @out_badge AS market_badge;
+```
+
+---
+
+#### 🔑 Procedure Design — IN vs OUT Parameters
+
+| Parameter | Type | Purpose |
+|-----------|------|---------|
+| `in_market` | `IN` | Market name input (default: India) |
+| `in_fiscal_year` | `IN` | Fiscal year to evaluate |
+| `out_badge` | `OUT` | Returns Gold or Silver classification |
+
+---
+
+**Tables Used:**
+| Table | Purpose |
+|-------|---------|
+| `fact_sales_monthly` | Monthly sold quantity per customer |
+| `dim_customer` | Maps customer code to market |
+
+---
+
+#### 📊 Result
+
+![Request 03 Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot(629).png)
 
 ---
