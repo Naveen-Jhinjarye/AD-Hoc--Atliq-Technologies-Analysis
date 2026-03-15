@@ -182,3 +182,77 @@ LIMIT 1000000;
 ![Query Result](https://github.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/blob/main/query%20code%20and%20result%20image/Screenshot%20(627).png)
 
 ---
+---
+
+### 🔖 Request 02 — Monthly Gross Sales Report (Stored Procedure)
+
+> **As a Data Analyst**, I want a stored procedure for monthly gross sales
+> so that any user with limited DB access can generate this report
+> independently — without involving the analytics team every time.
+
+**Output Fields:** Month · Total Gross Sales
+
+---
+
+#### ⚙️ Solution — Stored Procedure
+
+Instead of running a manual query each time, a reusable **Stored Procedure**
+was created. It accepts any customer code as input and returns their
+monthly gross sales automatically.
+```sql
+CREATE PROCEDURE `get_monthly_gross_sales_for_customers`(
+    in_customer_code TEXT
+)
+BEGIN
+    SELECT
+        sm.date,
+        ROUND(SUM(gp.gross_price * sm.sold_quantity), 2) AS total_gross_sales
+    FROM fact_sales_monthly sm
+    JOIN fact_gross_price gp
+        ON sm.product_code = gp.product_code
+        AND gp.fiscal_year = get_fiscal_year(sm.date)
+    WHERE FIND_IN_SET(sm.customer_code, in_customer_code) > 0
+    GROUP BY sm.date;
+END
+```
+
+> 💡 **Why `FIND_IN_SET()`?** It allows passing **multiple customer codes**
+> as a comma-separated string — making the procedure flexible for both
+> single and multiple customers in one call.
+
+---
+
+#### 🚀 How to Use
+```sql
+-- Single customer
+CALL get_monthly_gross_sales_for_customers('90002002');
+
+-- Multiple customers
+CALL get_monthly_gross_sales_for_customers('90002002,90002003,90002004');
+```
+
+---
+
+#### 🔑 Key Benefit
+
+| Without Stored Proc | With Stored Proc |
+|---------------------|-----------------|
+| Manual query edit every time | One `CALL` does the job |
+| Only analysts can run it | Any DB user can execute |
+| Error-prone & time-consuming | Fast, reusable & reliable |
+
+---
+
+**Tables Used:**
+| Table | Purpose |
+|-------|---------|
+| `fact_sales_monthly` | Monthly sold quantity per customer & product |
+| `fact_gross_price` | Gross price per product per fiscal year |
+
+---
+
+#### 📊 Result
+
+![Request 02 Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot(628).png)
+
+---
