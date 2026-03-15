@@ -513,3 +513,71 @@ Simply swap the year — the query handles the rest automatically.
 ![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(678).png)
 
 ---
+---
+
+### 🔖 Request 06 — Net Sales % Share Global (Top 10 Customers)
+
+> **As a Product Owner**, I want a global view of top 10 customers by
+> % net sales contribution for FY 2021 — to understand which customers
+> are driving the most revenue worldwide.
+
+**Output:** Top 10 Customers · % Net Sales Share · Bar Chart in Excel
+
+---
+
+#### ⚙️ Solution — CTE + Window Function
+```sql
+WITH net_sales_pct AS (
+    SELECT
+        customer,
+        fiscal_year,
+        ROUND(SUM(net_sales) / 1000000, 2) AS net_sales_mln
+    FROM net_sales_view
+    WHERE fiscal_year = 2021
+    GROUP BY customer
+)
+SELECT
+    *,
+    ROUND(
+        net_sales_mln * 100 / SUM(net_sales_mln) OVER()
+    , 2) AS pct_share
+FROM net_sales_pct
+ORDER BY net_sales_mln DESC;
+```
+
+---
+
+#### 🧠 Request 05 vs Request 06 — Key Difference
+
+| | Request 05 | Request 06 |
+|--|-----------|-----------|
+| **Scope** | % share within each region | % share across global total |
+| **Window** | `PARTITION BY region` | No partition — full global sum |
+| **View** | Region-wise breakdown | Single global ranking |
+| **Output** | Multiple regional charts | One global Top 10 bar chart |
+
+> 💡 **No `PARTITION BY` here** — `SUM() OVER()` without partition runs
+> across the **entire result set**, giving each customer their share of
+> the global total rather than a regional total.
+
+---
+
+#### 📊 Visualization — Excel Bar Chart
+
+SQL output was exported to Excel and a **Top 10 Customers Bar Chart**
+was built to visually rank customers by their global net sales % share.
+
+---
+
+**View Used:**
+| View | Purpose |
+|------|---------|
+| `net_sales_view` | Final net sales after all deductions |
+
+---
+
+#### 📊 Result
+
+![Request 06 Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot(632).png)
+
+---
