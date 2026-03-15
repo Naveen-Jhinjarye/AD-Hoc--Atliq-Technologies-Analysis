@@ -470,6 +470,8 @@ ORDER BY region, net_sales_mln DESC;
 
 ---
 
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(679).png)
+
 #### 🧠 Query Breakdown
 
 | Concept | Usage |
@@ -508,6 +510,6 @@ Simply swap the year — the query handles the rest automatically.
 
 #### 📊 Result — Top 10 Customers by Net Sales % per Region (FY 2021)
 
-![Request 05 Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot(631).png)
+![SQL Query Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot%20(678).png)
 
 ---
