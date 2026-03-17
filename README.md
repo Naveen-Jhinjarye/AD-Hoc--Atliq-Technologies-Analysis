@@ -344,7 +344,7 @@ SELECT @out_badge AS market_badge;
 
 #### 📊 Result
 
-![Request 03 Result](https://raw.githubusercontent.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/main/query%20code%20and%20result%20image/Screenshot(629).png)
+![Query Result](https://github.com/Naveen-Jhinjarye/AD-Hoc--Atliq-Technologies-Analysis/blob/main/query%20code%20and%20result%20image/Screenshot%20(654).png)
 
 ---
 
